@@ -54,7 +54,7 @@ namespace AsyncTCPServer.TCPServer
             
             var stream = client.GetStream();
             var buffer = new byte[_receiveBufferSize];
-            var packet = new Packet(_receiveBufferSize);
+            var packet = new Packet();
 
             while (true)
             {

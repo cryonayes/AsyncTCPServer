@@ -1,6 +1,7 @@
 ﻿using System.Net.Sockets;
-using NetworkingLib.Common;
-using NetworkingLib.TCPServer;
+using System.Text;
+using AsyncTCPServer.Common;
+using AsyncTCPServer.TCPServer;
 
 void HandleConnection(object? that, TcpClient client)
 {
@@ -12,12 +13,16 @@ void HandleDisconnection(object? that, TcpClient client)
     Console.WriteLine("Client disconnected!");
 }
 
-void HandleData(object? that, (TcpClient client, Packet data, int read) args)
+void HandleData(object? that, (NetworkStream client, Packet data) args)
 {
-    Console.WriteLine("Packet ID: " + args.data.ReadInt());
+    var stringRead = args.data.ReadString();
+    if (stringRead == "ping")
+        args.client.WriteAsync(Encoding.ASCII.GetBytes("pong"));
 }
 
 var mServer = new TcpServer(1337, 2048);
+
+
 mServer.OnDataReceived += HandleData;
 mServer.OnConnected += HandleConnection;
 mServer.OnDisconnected += HandleDisconnection;

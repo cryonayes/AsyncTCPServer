@@ -1,28 +1,39 @@
 using System.Text;
 
-namespace NetworkingLib.Common;
+namespace AsyncTCPServer.Common;
 
 public class Packet
 {
     private readonly List<byte> _buffer;
-    private readonly byte[] _readableBuffer;
-    private readonly int _bufferSize;
+    private byte[]? _readableBuffer;
     private int _readPos;
     
-    public Packet(int bufferSize)
+    public Packet()
     {
-        _bufferSize = bufferSize;
-        _buffer = new List<byte>(bufferSize);
-        _readableBuffer = new byte[bufferSize];
+        _buffer = new List<byte>();
+        _readableBuffer = null;
     }
 
-    public void SetBytes(byte[] data)
+    public Packet(int packetId)
     {
-        if (data.Count() > _bufferSize)
-            throw new Exception("Data size is bigger than buffer size");
-            
+        _buffer = new List<byte>();
+        _readableBuffer = null;
+        
+        Write(packetId);
+    }
+    
+    public Packet(byte[] data)
+    {
+        _buffer = new List<byte>(data.Count());
+        _readableBuffer = null;
+        
         Write(data);
-        Array.Copy(_buffer.ToArray(), _readableBuffer, _bufferSize);
+    }
+    
+    public void SetBytes(byte[]? data = null)
+    {
+        if (data != null) Write(data);
+        _readableBuffer = _buffer.ToArray();
     }
 
     public void WriteLength()
@@ -32,7 +43,7 @@ public class Packet
 
     public byte[] ToArray()
     {
-        Array.Copy(_buffer.ToArray(), _readableBuffer, _bufferSize);
+        _readableBuffer = _buffer.ToArray();
         return _readableBuffer;
     }
 
@@ -43,14 +54,14 @@ public class Packet
 
     public int GetUnreadLength()
     {
-        return _bufferSize - _readPos;
+        return _buffer.Count - _readPos;
     }
 
     public void Reset()
     {
         _buffer.Clear();
         _readPos = 0;
-        Array.Fill(_readableBuffer, (byte)0);
+        _readableBuffer = null;
     }
 
     #region BOOL
@@ -62,13 +73,11 @@ public class Packet
     
     public bool ReadBool(bool moveReadPos = true)
     {
-        if (_buffer.Count > _readPos)
-        {
-            var value = BitConverter.ToBoolean(_buffer.ToArray(), _readPos);
-            if (moveReadPos) _readPos += 1;
-            return value;
-        }
-        throw new Exception("Cannot read data from buffer");
+        if (_buffer.Count <= _readPos || _readableBuffer == null)
+            throw new Exception("Cannot read data from buffer");
+        var value = BitConverter.ToBoolean(_readableBuffer, _readPos);
+        if (moveReadPos) _readPos += 1;
+        return value;
     }
 
     #endregion
@@ -82,13 +91,11 @@ public class Packet
     
     public short ReadShort(bool moveReadPos = true)
     {
-        if (_buffer.Count > _readPos)
-        {
-            var value = BitConverter.ToInt16(_buffer.ToArray(), _readPos);
-            if (moveReadPos) _readPos += 2;
-            return value;
-        }
-        throw new Exception("Cannot read data from buffer");
+        if (_buffer.Count <= _readPos || _readableBuffer == null)
+            throw new Exception("Cannot read data from buffer");
+        var value = BitConverter.ToInt16(_readableBuffer, _readPos);
+        if (moveReadPos) _readPos += 2;
+        return value;
     }
     
     #endregion
@@ -102,13 +109,11 @@ public class Packet
     
     public int ReadInt(bool moveReadPos = true)
     {
-        if (_buffer.Count > _readPos)
-        {
-            var value = BitConverter.ToInt32(_buffer.ToArray(), _readPos);
-            if (moveReadPos) _readPos += 4;
-            return value;
-        }
-        throw new Exception("Cannot read data from buffer");
+        if (_buffer.Count <= _readPos || _readableBuffer == null)
+            throw new Exception("Cannot read data from buffer");
+        var value = BitConverter.ToInt32(_readableBuffer, _readPos);
+        if (moveReadPos) _readPos += 4;
+        return value;
     }
     
     #endregion
@@ -122,13 +127,11 @@ public class Packet
     
     public float ReadFloat(bool moveReadPos = true)
     {
-        if (_buffer.Count > _readPos)
-        {
-            var value = BitConverter.ToSingle(_buffer.ToArray(), _readPos);
-            if (moveReadPos) _readPos += 4;
-            return value;
-        }
-        throw new Exception("Cannot read data from buffer");
+        if (_buffer.Count <= _readPos || _readableBuffer == null)
+            throw new Exception("Cannot read data from buffer");
+        var value = BitConverter.ToSingle(_readableBuffer, _readPos);
+        if (moveReadPos) _readPos += 4;
+        return value;
     }
 
     #endregion
@@ -142,13 +145,11 @@ public class Packet
     
     public long ReadLong(bool moveReadPos = true)
     {
-        if (_buffer.Count > _readPos)
-        {
-            var value = BitConverter.ToInt64(_buffer.ToArray(), _readPos);
-            if (moveReadPos) _readPos += 8;
-            return value;
-        }
-        throw new Exception("Cannot read data from buffer");
+        if (_buffer.Count <= _readPos || _readableBuffer == null)
+            throw new Exception("Cannot read data from buffer");
+        var value = BitConverter.ToInt64(_readableBuffer, _readPos);
+        if (moveReadPos) _readPos += 8;
+        return value;
     }
 
     #endregion
@@ -162,13 +163,11 @@ public class Packet
 
     public byte ReadByte(bool moveReadPos = true)
     {
-        if (_buffer.Count > _readPos)
-        {
-            var value = _buffer[_readPos];
-            if (moveReadPos) _readPos += 1;
-            return value;
-        }
-        throw new Exception("Cannot read data from buffer");
+        if (_buffer.Count <= _readPos || _readableBuffer == null)
+            throw new Exception("Cannot read data from buffer");
+        var value = _readableBuffer[_readPos];
+        if (moveReadPos) _readPos += 1;
+        return value;
     }
     
     #endregion
@@ -182,13 +181,10 @@ public class Packet
 
     public byte[] ReadBytes(int lenght, bool moveReadPos = true)
     {
-        if (_buffer.Count > _readPos)
-        {
-            var value = _buffer.GetRange(_readPos, lenght).ToArray();
-            if (moveReadPos) _readPos += lenght;
-            return value;
-        }
-        throw new Exception("Cannot read data from buffer");
+        if (_buffer.Count <= _readPos) throw new Exception("Cannot read data from buffer");
+        var value = _buffer.GetRange(_readPos, lenght).ToArray();
+        if (moveReadPos) _readPos += lenght;
+        return value;
     }
     
     #endregion
@@ -203,14 +199,12 @@ public class Packet
     
     public string ReadString(bool moveReadPos = true)
     {
-        if (_buffer.Count > _readPos)
-        {
-            var length = ReadInt();
-            var value = Encoding.ASCII.GetString(_readableBuffer, _readPos, length);
-            if (moveReadPos && value.Length > 0) _readPos += length;
-            return value;
-        }
-        throw new Exception("Cannot read data from buffer");
+        if (_buffer.Count <= _readPos || _readableBuffer == null)
+            throw new Exception("Cannot read data from buffer");
+        var length = ReadInt();
+        var value = Encoding.ASCII.GetString(_readableBuffer, _readPos, length);
+        if (moveReadPos && value.Length > 0) _readPos += length;
+        return value;
     }
 
     #endregion

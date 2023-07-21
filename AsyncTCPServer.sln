@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AsyncTCPServer", "AsyncTCPServer\AsyncTCPServer.csproj", "{2A21011F-22EA-430B-8CE7-0582D5923860}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AsyncTCPServer.UnitTests", "AsyncTCPServer.UnitTests\AsyncTCPServer.UnitTests.csproj", "{0ED404FC-7105-45AC-8CD2-83B46256CCA1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{2A21011F-22EA-430B-8CE7-0582D5923860}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2A21011F-22EA-430B-8CE7-0582D5923860}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2A21011F-22EA-430B-8CE7-0582D5923860}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0ED404FC-7105-45AC-8CD2-83B46256CCA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0ED404FC-7105-45AC-8CD2-83B46256CCA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0ED404FC-7105-45AC-8CD2-83B46256CCA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0ED404FC-7105-45AC-8CD2-83B46256CCA1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

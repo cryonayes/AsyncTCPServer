@@ -1,8 +1,8 @@
 using System.Net;
 using System.Net.Sockets;
-using NetworkingLib.Common;
+using AsyncTCPServer.Common;
 
-namespace NetworkingLib.TCPServer
+namespace AsyncTCPServer.TCPServer
 {
     public class TcpServer
     {
@@ -14,7 +14,9 @@ namespace NetworkingLib.TCPServer
 
         public event EventHandler<TcpClient>? OnConnected;
         public event EventHandler<TcpClient>? OnDisconnected;
-        public event EventHandler<(TcpClient client, Packet packet, int read)>? OnDataReceived;
+        public event EventHandler<(NetworkStream stream, Packet packet)>? OnDataReceived;
+
+        public bool IsListening = false;
 
         public TcpServer(int port, int receiveBufferSize)
         {
@@ -22,9 +24,16 @@ namespace NetworkingLib.TCPServer
             _receiveBufferSize = receiveBufferSize;
         }
 
+        public void Stop()
+        {
+            _listener.Stop();
+            IsListening = false;
+        }
+        
         public async Task StartAsync(CancellationToken token = default)
         {
             _listener.Start();
+            IsListening = true;
 
             while (!token.IsCancellationRequested) {
                 try {
@@ -54,8 +63,8 @@ namespace NetworkingLib.TCPServer
                     var bytesRead = await stream.ReadAsync(buffer, 0, _receiveBufferSize);
                     if (bytesRead == 0)
                         break;
-                    packet.Write(buffer);
-                    OnDataReceived?.Invoke(this, (client, packet, bytesRead));
+                    packet.SetBytes(buffer);
+                    OnDataReceived?.Invoke(this, (stream, packet));
                     packet.Reset();
                 }
                 catch (Exception ex)

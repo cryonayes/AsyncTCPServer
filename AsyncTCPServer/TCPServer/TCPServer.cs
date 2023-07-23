@@ -8,14 +8,11 @@ namespace AsyncTCPServer.TCPServer
     {
         private readonly TcpListener _listener;
         private readonly int _receiveBufferSize;
-
-        private readonly List<TcpClient> _clients = new();
-        private readonly object _listLock = new();
-
+        
         public event EventHandler<TcpClient>? OnConnected;
         public event EventHandler<TcpClient>? OnDisconnected;
-        public event EventHandler<(NetworkStream stream, Packet packet)>? OnDataReceived;
-
+        public event EventHandler<(TcpClient client, Packet packet)>? OnDataReceived;
+        
         public bool IsListening = false;
 
         public TcpServer(int port, int receiveBufferSize)
@@ -34,7 +31,7 @@ namespace AsyncTCPServer.TCPServer
         {
             _listener.Start();
             IsListening = true;
-
+            
             while (!token.IsCancellationRequested) {
                 try {
                     var client = await _listener.AcceptTcpClientAsync(token);
@@ -48,8 +45,6 @@ namespace AsyncTCPServer.TCPServer
 
         private async Task HandleClientAsync(TcpClient client)
         {
-            lock (_listLock)
-                _clients.Add(client);
             OnConnected?.Invoke(this, client);
             
             var stream = client.GetStream();
@@ -64,7 +59,7 @@ namespace AsyncTCPServer.TCPServer
                     if (bytesRead == 0)
                         break;
                     packet.SetBytes(buffer);
-                    OnDataReceived?.Invoke(this, (stream, packet));
+                    OnDataReceived?.Invoke(this, (client, packet));
                     packet.Reset();
                 }
                 catch (Exception ex)
@@ -74,8 +69,6 @@ namespace AsyncTCPServer.TCPServer
                 }
             }
             OnDisconnected?.Invoke(this, client);
-            lock (_listLock)
-                _clients.Remove(client);
             client.Close();
         }
     }

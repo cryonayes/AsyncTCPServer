@@ -15,18 +15,18 @@ internal enum PacketId
 public class ServerTest
 {
     private readonly TcpServer _mServer;
-    private readonly ITestOutputHelper output;
+    private readonly ITestOutputHelper _output;
     
     public ServerTest(ITestOutputHelper testOutput)
     {
-        output = testOutput;
+        _output = testOutput;
         
         _mServer = new TcpServer(1337, 2048);
         _mServer.OnDataReceived += OnDataReceived; 
         Task.Run(async () => await _mServer.StartAsync());
     }
 
-    private void OnDataReceived(object? sender, (NetworkStream stream, Packet packet) args)
+    private void OnDataReceived(object? sender, (TcpClient client, Packet packet) args)
     {
         var packetId = args.packet.ReadInt();
         switch (packetId)
@@ -35,10 +35,10 @@ public class ServerTest
                 var packet = new Packet((int)PacketId.Pong);
                 packet.Write("pong");
                 packet.WriteLength();
-                args.stream.Write(packet.ToArray());
+                args.client.GetStream().Write(packet.ToArray());
                 break;
             default:
-                output.WriteLine("Unknown packet!");
+                _output.WriteLine("Unknown packet!");
                 break;
         }
     }
